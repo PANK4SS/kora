@@ -5,6 +5,7 @@ import '../../core/config/colors.dart';
 import '../../core/config/kora_icons.dart';
 import '../../core/config/text_styles.dart';
 import '../../core/config/widgets.dart';
+import '../../core/network/resource_api_service.dart';
 import '../../core/network/session_manager.dart';
 import '../../core/network/user_api_service.dart';
 import '../../models/user.dart';
@@ -37,6 +38,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _loadProfile() async {
     final user = await UserApiService.refreshCurrentUser();
     final profileImageUrl = await SessionManager.getProfileImageUrl();
+    final offlineIds = user != null && user.id.isNotEmpty
+        ? await ResourceApiService.getOfflineDocumentIds(user.id)
+        : <String>{};
 
     if (!mounted) {
       return;
@@ -44,7 +48,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     setState(() {
       if (user != null) {
-        _currentUser = user;
+        _currentUser = user.copyWith(
+          downloadedDocumentsCount: offlineIds.length,
+        );
       }
       _profileImageUrl = profileImageUrl;
     });
