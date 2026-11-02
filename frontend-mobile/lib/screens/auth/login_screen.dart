@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../core/config/colors.dart';
-import '../../core/config/kora_icons.dart';
 import '../../core/config/text_styles.dart';
 import '../../core/config/widgets.dart';
 import '../../core/network/auth_api_service.dart';
@@ -20,44 +19,13 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _universityController = TextEditingController();
-  String? _selectedUniversity;
   bool _isLoading = false;
-  bool _isUniversitiesLoading = false;
-
-  List<String> _universities = <String>[];
-
-  @override
-  void initState() {
-    super.initState();
-    unawaited(_loadUniversities());
-  }
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
-    _universityController.dispose();
     super.dispose();
-  }
-
-  Future<void> _loadUniversities() async {
-    setState(() => _isUniversitiesLoading = true);
-    try {
-      final universities = await AuthApiService.getUniversities();
-      if (!mounted) {
-        return;
-      }
-      setState(() {
-        _universities = universities;
-      });
-    } catch (_) {
-      // Ne bloque pas la connexion si la liste des universités échoue
-    } finally {
-      if (mounted) {
-        setState(() => _isUniversitiesLoading = false);
-      }
-    }
   }
 
   Future<void> _handleLogin() async {
@@ -152,22 +120,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           }
                           return null;
                         },
-                      ),
-
-                      const SizedBox(height: 16),
-
-                      // Sélection de l'université - UTILISE prefixWidget
-                      CustomTextField(
-                        hintText: 'Université',
-                        readOnly: true,
-                        enabled: !_isUniversitiesLoading,
-                        prefixWidget: KoraIcons.university(
-                          size: 20,
-                          color: AppColors.iconDark,
-                        ),
-                        suffixIcon: const Icon(Icons.keyboard_arrow_down),
-                        controller: _universityController,
-                        onTap: _showUniversityPicker,
                       ),
 
                       const SizedBox(height: 64),
@@ -270,61 +222,4 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  /// Affiche le sélecteur d'université
-  void _showUniversityPicker() {
-    if (_universities.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Liste des universités indisponible pour le moment.'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      return;
-    }
-
-    // ignore: inference_failure_on_function_invocation
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        return Container(
-          padding: const EdgeInsets.symmetric(vertical: 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Titre
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                child: Text(
-                  'Sélectionner votre université',
-                  style: AppTextStyles.h4,
-                ),
-              ),
-
-              const Divider(),
-
-              // Liste des universités
-              ..._universities.map((university) {
-                return ListTile(
-                  title: Text(university),
-                  onTap: () {
-                    setState(() {
-                      _selectedUniversity = university;
-                      _universityController.text = university;
-                    });
-                    Navigator.pop(context);
-                  },
-                  trailing: _selectedUniversity == university
-                      ? const Icon(Icons.check, color: AppColors.primaryGold)
-                      : null,
-                );
-              }),
-            ],
-          ),
-        );
-      },
-    );
-  }
 }
