@@ -16,12 +16,22 @@ class User {
     final lastName = (json['nom'] ?? '').toString();
     final fallbackName = '$firstName $lastName'.trim();
     final universityField = json['university'] ?? json['universite'];
-    final universityId = universityField is Map<String, dynamic>
-        ? (universityField['_id'] ?? '').toString()
-        : (universityField ?? '').toString();
-    final universityName = universityField is Map<String, dynamic>
-        ? (universityField['nom'] ?? '').toString()
-        : (universityField ?? '').toString();
+    final explicitUniversityId = (json['universityId'] ?? '').toString();
+
+    final String universityId;
+    final String universityName;
+    if (universityField is Map<String, dynamic>) {
+      universityId = (universityField['_id'] ?? '').toString();
+      universityName = (universityField['nom'] ?? '').toString();
+    } else {
+      final rawUniversity = (universityField ?? '').toString();
+      final isObjectId =
+          RegExp(r'^[0-9a-fA-F]{24}$').hasMatch(rawUniversity);
+      universityName = isObjectId ? '' : rawUniversity;
+      universityId = explicitUniversityId.isNotEmpty
+          ? explicitUniversityId
+          : (isObjectId ? rawUniversity : '');
+    }
 
     return User(
       id: (json['id'] ?? json['_id'] ?? '').toString(),
