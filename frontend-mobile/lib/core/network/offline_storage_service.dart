@@ -76,6 +76,33 @@ class OfflineStorageService {
     return documents.map((item) => item.id).toSet();
   }
 
+  /// Associe l'identifiant du suivi backend à un document déjà téléchargé.
+  static Future<Document?> setOfflineRecordId({
+    required String userId,
+    required String documentId,
+    required String offlineRecordId,
+  }) async {
+    final documents = await getOfflineDocuments(userId);
+    var updated = false;
+
+    final updatedDocuments = documents.map((document) {
+      if (document.id != documentId) {
+        return document;
+      }
+      updated = true;
+      return document.copyWith(offlineRecordId: offlineRecordId);
+    }).toList();
+
+    if (!updated) {
+      return null;
+    }
+
+    await _persistDocuments(userId, updatedDocuments);
+    return updatedDocuments.firstWhere(
+      (document) => document.id == documentId,
+    );
+  }
+
   static Future<void> removeOfflineDocument({
     required String userId,
     required Document document,

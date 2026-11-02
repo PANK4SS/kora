@@ -22,7 +22,7 @@ class ResourceApiService {
     required Document document,
     required User user,
   }) async {
-    final offlineDocument = await OfflineStorageService.downloadDocument(
+    var offlineDocument = await OfflineStorageService.downloadDocument(
       document: document,
       userId: user.id,
       dio: ApiClient.instance,
@@ -36,13 +36,24 @@ class ResourceApiService {
     }
 
     try {
-      await ApiClient.instance.post<void>(
+      final response = await ApiClient.instance.post<Map<String, dynamic>>(
         '/offline-downloads',
         data: {
           'resourceId': document.id,
           'userId': user.id,
         },
       );
+      final recordId = (response.data?['_id'] ?? '').toString();
+      if (recordId.isNotEmpty) {
+        final updated = await OfflineStorageService.setOfflineRecordId(
+          userId: user.id,
+          documentId: document.id,
+          offlineRecordId: recordId,
+        );
+        if (updated != null) {
+          offlineDocument = updated;
+        }
+      }
     } catch (_) {
       // La synchro backend est secondaire par rapport au stockage local.
     }
