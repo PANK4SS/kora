@@ -1,30 +1,51 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:kora_mobile/main.dart';
+import 'package:kora_mobile/models/document.dart';
+import 'package:kora_mobile/models/user.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const KoraApp());
+  group('User.fromJson', () {
+    test('conserve universityId lors de la désérialisation', () {
+      final user = User.fromJson({
+        'id': 'u1',
+        'name': 'Alice',
+        'email': 'alice@kora.bf',
+        'university': 'Université de Ouagadougou',
+        'universityId': '507f1f77bcf86cd799439011',
+      });
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+      expect(user.university, 'Université de Ouagadougou');
+      expect(user.universityId, '507f1f77bcf86cd799439011');
+    });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    test('interprète un ObjectId comme identifiant université', () {
+      final user = User.fromJson({
+        'id': 'u1',
+        'name': 'Alice',
+        'universite': '507f1f77bcf86cd799439011',
+      });
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+      expect(user.universityId, '507f1f77bcf86cd799439011');
+      expect(user.university, isEmpty);
+    });
+  });
+
+  group('Document.fromJson', () {
+    test('relit un document stocké hors ligne', () {
+      final document = Document.fromJson({
+        'id': 'd1',
+        'title': "Cours d'analyse",
+        'type': 'cours',
+        'level': 'L1',
+        'filiere': 'Mathématiques',
+        'filePath': '/tmp/cours.pdf',
+        'isDownloaded': true,
+      });
+
+      expect(document.id, 'd1');
+      expect(document.title, "Cours d'analyse");
+      expect(document.type, DocumentType.cours);
+      expect(document.filePath, '/tmp/cours.pdf');
+      expect(document.isDownloaded, isTrue);
+    });
   });
 }
