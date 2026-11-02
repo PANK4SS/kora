@@ -522,7 +522,32 @@ class _ExplorerScreenState extends State<ExplorerScreen> {
     );
   }
 
-  void _handleDocumentTap(Document document) {}
+  void _handleDocumentTap(Document document) {
+    // ignore: inference_failure_on_function_invocation
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(document.title),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Type: ${document.typeLabel}'),
+            Text('Niveau: ${document.level}'),
+            Text('Filière: ${document.filiere}'),
+            if (document.subject != null)
+              Text('Matière: ${document.subject}'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Fermer'),
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _buildBottomNavigationBar() {
     return Container(
